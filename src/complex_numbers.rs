@@ -1,5 +1,7 @@
+use std::f64::consts::PI;
 use std::ops::{Add, Mul, Neg, Sub, Div};
 use std::fmt::{Formatter, Result, Display};
+use std::convert::From;
 
 pub fn programming_drill_1_1_1() {
     println!("Solution to the programming drill 1.1.1.");
@@ -21,6 +23,64 @@ pub fn programming_drill_1_2_1() {
     println!("({}) / ({}) = {}", c1, c2, c1 / c2);
     println!("|{}| = {}", c1, Complex::abs(c1));
     println!("Conj[{}] = {}", c1, Complex::conjugate(c1));
+}
+
+pub fn programming_drill_1_3_1() {
+    println!("Solution to the programming drill 1.3.1.");
+
+    let cartesian1 = Cartesian(1.0, 1.0);
+    let cartesian2 = Cartesian(-1.0, 1.0);
+    let polar1 = Polar(f64::sqrt(2.0), PI / 4.0);
+    let polar2 = Polar(f64::sqrt(2.0), (3.0 * PI) / 4.0);
+
+    println!("Cartesian {} to polar {}", cartesian1, Polar::from(cartesian1));
+    println!("Cartesian {} to polar {}", cartesian2, Polar::from(cartesian2));
+    println!("Polar {} to cartesian {}", polar1, Cartesian::from(polar1));
+    println!("Polar {} to cartesian {}", polar2, Cartesian::from(polar2));
+}
+
+/// Polar coordinates representation.
+#[derive(Debug, Copy, Clone, PartialEq)]
+struct Polar(f64, f64);
+
+impl From<Complex> for Polar {
+    fn from(Complex { real: r, imaginary: i }: Complex) -> Self {
+        Polar(f64::sqrt(f64::powi(r, 2) + f64::powi(i, 2)), f64::atan(i / r))
+    }
+}
+
+impl From<Cartesian> for Polar {
+    fn from(Cartesian(x, y): Cartesian) -> Self {
+        Polar(f64::sqrt(f64::powi(x, 2) + f64::powi(y, 2)), f64::atan(y / x))
+    }
+}
+
+impl Display for Polar {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "({}, {})", self.0, self.1)
+    }
+}
+
+/// Cartesian coordinates representation.
+#[derive(Debug, Copy, Clone, PartialEq)]
+struct Cartesian(f64, f64);
+
+impl From<Complex> for Cartesian {
+    fn from(Complex { real: r, imaginary: i }: Complex) -> Self {
+        Cartesian(r, i)
+    }
+}
+
+impl From<Polar> for Cartesian {
+    fn from(Polar(magnitude, phase): Polar) -> Self {
+        Cartesian(magnitude * f64::cos(phase), magnitude * f64::sin(phase))
+    }
+}
+
+impl Display for Cartesian {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "({}, {})", self.0, self.1)
+    }
 }
 
 /// Representation of a Complex number.
@@ -50,6 +110,18 @@ impl Complex {
     pub fn conjugate(self) -> Self {
         let Complex { real: r, imaginary: i } = self;
         Self::new(r, -i)
+    }
+}
+
+impl From<Polar> for Complex {
+    fn from(polar: Polar) -> Self {
+        Complex::from(Cartesian::from(polar))
+    }
+}
+
+impl From<Cartesian> for Complex {
+    fn from(Cartesian(x, y): Cartesian) -> Self {
+        Self::new(x, y)
     }
 }
 
@@ -170,5 +242,18 @@ mod tests {
         assert_eq!(Complex::conjugate(Complex::new(4.0, -3.0)), Complex::new(4.0, 3.0));
         assert_eq!(Complex::conjugate(Complex::new(0.0, 5.0)), Complex::new(0.0, -5.0));
         assert_eq!(Complex::conjugate(Complex::new(1.0, 0.0)), Complex::new(1.0, 0.0));
+    }
+
+    #[test]
+    fn test_cartesian_to_polar() {
+        assert_eq!(Polar::from(Cartesian(1.0, 1.0)), Polar(f64::sqrt(2.0), f64::atan(1.0)));
+    }
+
+    #[test]
+    fn test_polar_to_cartesian() {
+        let Cartesian(x, y) = Cartesian::from(Polar(f64::sqrt(2.0), f64::atan(1.0)));
+
+        // Allow for some rounding errors.
+        assert!(f64::abs(x - 1.0) < 0.01 && f64::abs(y - 1.0) < 0.01);
     }
 }
