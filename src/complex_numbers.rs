@@ -39,6 +39,56 @@ pub fn programming_drill_1_3_1() {
     println!("Polar {} to cartesian {}", polar2, Cartesian::from(polar2));
 }
 
+pub fn programming_drill_1_3_2() {
+    println!("Solution to the programming drill 1.3.2.");
+    let mut matrix = vec![vec![false; 15]; 15];
+
+    // Drawing four tiles.
+    matrix[5][7] = true;
+    matrix[7][5] = true;
+    matrix[7][9] = true;
+    matrix[9][7] = true;
+
+    // Print the first image.
+    print_matrix(&matrix);
+    println!("*****************************************");
+
+    let mut new_matrix = vec![vec![false; 15]; 15];
+
+    // Resizing and rotating factor.
+    let factor = Complex::from(Polar(2.0, PI / 4.0));
+
+    // Reposition tiles.
+    for (y, row) in matrix.iter().enumerate() {
+        for (x, elem) in row.iter().enumerate() {
+            // We ignore blank elements because they could overlap (due to
+            // rounding errors) with filled tiles. A more robust algorithm
+            // would effectively prevent this, but that is out of the scope
+            // of this exercise.
+            if !(*elem) {
+                continue;
+            }
+
+            // Compute the new position.
+            let mut c = Complex::new((x as f64) - 7.0, (y as f64) - 7.0);
+            c = c * factor;
+            let Complex { real: r, imaginary: i } = c;
+            let new_x = (r as i64) + 7;
+            let new_y = (i as i64) + 7;
+
+            // Ignore out of bounds.
+            if new_x >= 0 && new_x < (row.len() as i64) {
+                if new_y >= 0 && new_y < (matrix.len() as i64) {
+                    new_matrix[(new_y as usize)][(new_x as usize)] = *elem;
+                }
+            }
+        }
+    }
+
+    // Print the new image.
+    print_matrix(&new_matrix);
+}
+
 /// Polar coordinates representation.
 #[derive(Debug, Copy, Clone, PartialEq)]
 struct Polar(f64, f64);
@@ -256,4 +306,14 @@ mod tests {
         // Allow for some rounding errors.
         assert!(f64::abs(x - 1.0) < 0.01 && f64::abs(y - 1.0) < 0.01);
     }
+}
+
+fn print_matrix(matrix: &[Vec<bool>]) {
+    matrix.iter().enumerate().for_each(|(i, row)| {
+        print!("{}\t", i);
+        row.iter().enumerate().for_each(|(_, col)| {
+            print!("{}", if *col { "■" } else { "□" });
+        });
+        println!()
+    });
 }
