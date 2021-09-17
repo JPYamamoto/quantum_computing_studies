@@ -10,4 +10,6 @@ fn main() {
     complex_numbers::programming_drill_1_3_1();
     println!();
     complex_numbers::programming_drill_1_3_2();
+    println!();
+    complex_vector_spaces::programming_drill_2_1_1();
 }
