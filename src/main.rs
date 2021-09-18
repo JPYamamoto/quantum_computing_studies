@@ -14,4 +14,6 @@ fn main() {
     chapter1::programming_drill_1_3_2();
     println!();
     chapter2::programming_drill_2_1_1();
+    println!();
+    chapter2::programming_drill_2_2_1();
 }
