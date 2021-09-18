@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 
-use crate::utils::complex_numbers::{Complex, Cartesian, Polar};
+use crate::utils::complex_number::{Complex, Cartesian, Polar};
 
 pub fn programming_drill_1_1_1() {
     println!("Solution to the programming drill 1.1.1.");

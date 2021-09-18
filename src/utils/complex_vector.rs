@@ -1,8 +1,11 @@
 use std::{fmt::Display, ops::{Add, Mul, Neg}};
 
-use crate::utils::complex_numbers::Complex;
+use crate::utils::complex_number::Complex;
 
 /// Newtype pattern for complex vectors.
+/// I should have probably gone with generics, but I think complex will do just
+/// fine for the purposes of the book. Maybe I'll change this later if the need
+/// comes up.
 #[derive(Debug, PartialEq)]
 pub struct ComplexVector(pub Vec<Complex>);
 

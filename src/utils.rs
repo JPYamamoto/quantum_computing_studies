@@ -1,2 +1,3 @@
-pub mod complex_numbers;
-pub mod complex_vectors;
+pub mod complex_number;
+pub mod complex_vector;
+pub mod complex_matrix;

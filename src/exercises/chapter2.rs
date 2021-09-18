@@ -1,5 +1,5 @@
-use crate::utils::complex_numbers::Complex;
-use crate::utils::complex_vectors::ComplexVector;
+use crate::utils::complex_number::Complex;
+use crate::utils::complex_vector::ComplexVector;
 
 pub fn programming_drill_2_1_1() {
     println!("Solution to the programming drill 2.1.1.");
