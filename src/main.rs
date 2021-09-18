@@ -1,15 +1,17 @@
-mod complex_numbers;
-mod complex_vector_spaces;
+mod utils;
+mod exercises;
+
+use exercises::{chapter1, chapter2};
 
 fn main() {
     println!("Hello, quantum!");
-    complex_numbers::programming_drill_1_1_1();
+    chapter1::programming_drill_1_1_1();
     println!();
-    complex_numbers::programming_drill_1_2_1();
+    chapter1::programming_drill_1_2_1();
     println!();
-    complex_numbers::programming_drill_1_3_1();
+    chapter1::programming_drill_1_3_1();
     println!();
-    complex_numbers::programming_drill_1_3_2();
+    chapter1::programming_drill_1_3_2();
     println!();
-    complex_vector_spaces::programming_drill_2_1_1();
+    chapter2::programming_drill_2_1_1();
 }

@@ -1,27 +1,12 @@
 use std::{fmt::Display, ops::{Add, Mul, Neg}};
 
-use crate::complex_numbers::Complex;
+use crate::utils::complex_numbers::Complex;
 
-pub fn programming_drill_2_1_1() {
-    println!("Solution to the programming drill 2.1.1.");
-
-    let v1 = ComplexVector(vec![Complex::new(6.0, -4.0), Complex::new(7.0, 3.0), Complex::new(4.2, -8.1), Complex::new(0.0, -3.0)]);
-    print!("-{} = ", v1);
-    println!("{}", -v1);
-
-    let v2 = ComplexVector(vec![Complex::new(6.0, 3.0), Complex::new(0.0, 0.0), Complex::new(5.0, 1.0), Complex::new(4.0, 0.0)]);
-    print!("{} * {} = ", Complex::new(3.0, 2.0), v2);
-    println!("{}", v2 * Complex::new(3.0, 2.0));
-
-    let v3 = ComplexVector(vec![Complex::new(6.0, -4.0), Complex::new(7.0, 3.0), Complex::new(4.2, -8.1), Complex::new(0.0, -3.0)]);
-    let v4 = ComplexVector(vec![Complex::new(16.0, 2.5), Complex::new(0.0, -7.0), Complex::new(6.0, 0.0), Complex::new(0.0, -4.0)]);
-    print!("{} + {} = ", v3, v4);
-    println!("{}", v3+v4);
-}
-
+/// Newtype pattern for complex vectors.
 #[derive(Debug, PartialEq)]
-pub struct ComplexVector(Vec<Complex>);
+pub struct ComplexVector(pub Vec<Complex>);
 
+/// Support for adding complex vectors.
 impl Add for ComplexVector {
     type Output = Self;
 
@@ -30,6 +15,25 @@ impl Add for ComplexVector {
     }
 }
 
+/// Support for scalar product on complex vectors.
+impl Mul<Complex> for ComplexVector {
+    type Output = Self;
+
+    fn mul(self, rhs: Complex) -> Self::Output {
+        product_vector_scalar(self, rhs)
+    }
+}
+
+/// Support for negating complex vectors.
+impl Neg for ComplexVector {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        inverse_vector(self)
+    }
+}
+
+/// Support for displaying complex vectors.
 impl Display for ComplexVector {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let result_string = self.0.iter()
@@ -41,22 +45,7 @@ impl Display for ComplexVector {
     }
 }
 
-impl Mul<Complex> for ComplexVector {
-    type Output = Self;
-
-    fn mul(self, rhs: Complex) -> Self::Output {
-        product_vector_scalar(self, rhs)
-    }
-}
-
-impl Neg for ComplexVector {
-    type Output = Self;
-
-    fn neg(self) -> Self::Output {
-        inverse_vector(self)
-    }
-}
-
+/// Coordinate-wise vector addition.
 fn add_vectors(ComplexVector(lhs): ComplexVector, ComplexVector(rhs): ComplexVector) -> ComplexVector {
     if lhs.len() != rhs.len() {
         panic!("Cannot add vectors of different size.");
@@ -69,10 +58,12 @@ fn add_vectors(ComplexVector(lhs): ComplexVector, ComplexVector(rhs): ComplexVec
     ComplexVector(result_vector)
 }
 
+/// Coordinate-wise complex scalar by complex vector product.
 fn product_vector_scalar(ComplexVector(vector): ComplexVector, scalar: Complex) -> ComplexVector {
     ComplexVector(vector.iter().map(|&x| x * scalar).collect())
 }
 
+/// Inverse over addition vector, by negating each coordinate.
 fn inverse_vector(ComplexVector(vector): ComplexVector) -> ComplexVector {
     ComplexVector(vector.iter().map(|&x| -x).collect())
 }
