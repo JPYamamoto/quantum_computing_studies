@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul, Neg, Sub, Div};
+use std::ops::{Add, Mul, Neg, Sub, Div, AddAssign};
 use std::fmt::{Formatter, Result, Display};
 use std::convert::From;
 
@@ -94,6 +94,16 @@ impl Add for Complex {
 
     fn add(self, other: Self) -> Self {
         Self::new(self.real + other.real, self.imaginary + other.imaginary)
+    }
+}
+
+// Support for assigning addition result of complex numbers.
+impl AddAssign for Complex {
+    fn add_assign(&mut self, other: Self) {
+        *self = Self {
+            real: self.real + other.real,
+            imaginary: self.imaginary + other.imaginary,
+        };
     }
 }
 

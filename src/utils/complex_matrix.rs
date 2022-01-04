@@ -1,7 +1,8 @@
-use std::ops::{Add, Mul, Neg, Index};
+use std::ops::{Add, Mul, Neg, Index, IndexMut};
 use std::fmt::Display;
 
 use crate::utils::complex_number::Complex;
+use crate::utils::complex_vector::ComplexVector;
 
 #[derive(Debug, PartialEq)]
 pub struct ComplexMatrix{
@@ -24,6 +25,13 @@ impl ComplexMatrix {
     }
 }
 
+impl From<ComplexVector> for ComplexMatrix {
+    fn from(ComplexVector(rhs): ComplexVector) -> Self {
+        let rows = rhs.len();
+        ComplexMatrix { elements: rhs, rows, columns: 1 }
+    }
+}
+
 impl Index<[usize; 2]> for ComplexMatrix {
     type Output = Complex;
 
@@ -36,6 +44,20 @@ impl Index<[usize; 2]> for ComplexMatrix {
 
         &self.elements[(row * &self.columns) + column]
     }
+}
+
+impl IndexMut<[usize; 2]> for ComplexMatrix {
+    fn index_mut(&mut self, index: [usize; 2]) -> &mut Self::Output {
+        let [row, column] = &index;
+
+        if row >= &self.rows || column >= &self.columns {
+            panic!("Index out of range.")
+        }
+
+        &mut self.elements[(row * &self.columns) + column]
+    }
+
+
 }
 
 impl Add for ComplexMatrix {
@@ -52,6 +74,24 @@ impl Mul<Complex> for ComplexMatrix {
 
     fn mul(self, rhs: Complex) -> Self::Output {
         product_matrix_scalar(self, rhs)
+    }
+}
+
+/// Support for vector-matrix product.
+impl Mul<ComplexVector> for ComplexMatrix {
+    type Output = Self;
+
+    fn mul(self, rhs: ComplexVector) -> Self::Output {
+        product_matrices(self, ComplexMatrix::from(rhs))
+    }
+}
+
+/// Support for product on complex matrices.
+impl Mul<ComplexMatrix> for ComplexMatrix {
+    type Output = Self;
+
+    fn mul(self, rhs: ComplexMatrix) -> Self::Output {
+        product_matrices(self, rhs)
     }
 }
 
@@ -116,6 +156,42 @@ fn product_matrix_scalar(matrix: ComplexMatrix, scalar: Complex) -> ComplexMatri
     }
 }
 
+/// Matrix-Vector product.
+pub fn product_matrix_vector(matrix: ComplexMatrix, vector: ComplexVector) -> ComplexVector {
+    //let vec_to_mat = ComplexMatrix::from(vector);
+    //let ComplexMatrix { elements, .. } = matrix * vec_to_mat;
+    //ComplexVector(elements)
+    //
+    let vec_to_mat = ComplexMatrix::from(vector);
+    let ComplexMatrix { elements, .. } = matrix * vec_to_mat;
+    ComplexVector(elements)
+}
+
+/// Standard complex matrices product.
+fn product_matrices(m1: ComplexMatrix, m2: ComplexMatrix) -> ComplexMatrix {
+    if m1.columns != m2.rows {
+        panic!("Number of columns in the left-hand side matrix should be the \
+                same as number of rows in the right-hand side matrix.");
+    }
+
+    let mut m3 = ComplexMatrix::new(
+        vec![Complex::new(0.0, 0.0); m1.rows * m2.columns], m1.rows, m2.columns);
+
+    for j in 0..m3.rows {
+        for k in 0..m3.columns {
+            let mut sum = Complex::new(0.0, 0.0);
+
+            for h in 0..m1.columns {
+                sum += m1[[j,h]] * m2[[h,k]]
+            }
+
+            m3[[j,k]] = sum;
+        }
+    }
+
+    m3
+}
+
 /// Inverse over addition matrix, by negating each coordinate.
 fn inverse_matrix(matrix: ComplexMatrix) -> ComplexMatrix {
     ComplexMatrix {
@@ -128,6 +204,21 @@ fn inverse_matrix(matrix: ComplexMatrix) -> ComplexMatrix {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_vector_matrix() {
+        let v = ComplexVector(vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new(1.0, 0.0)]);
+        let m = ComplexMatrix::new(vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0), Complex::new(0.0, 0.0), Complex::new(1.0, 0.0)], 4, 1);
+        assert_eq!(ComplexMatrix::from(v), m);
+    }
+
+    #[test]
+    fn test_matrix_product_vector() {
+        let m = ComplexMatrix::new(vec![Complex::new(1.0, 0.0), Complex::new(2.0, 0.0), Complex::new(3.0, 0.0), Complex::new(4.0, 0.0)], 2, 2);
+        let v1 = ComplexVector(vec![Complex::new(1.0, 0.0), Complex::new(2.0, 0.0)]);
+        let v2 = ComplexVector(vec![Complex::new(5.0, 0.0), Complex::new(11.0, 0.0)]);
+        assert_eq!(product_matrix_vector(m, v1), v2);
+    }
 
     #[test]
     fn test_matrix_add() {
@@ -151,5 +242,33 @@ mod tests {
         let m2 = ComplexMatrix::new(vec![Complex::new(-6.0, 4.0), Complex::new(-7.0, -3.0), Complex::new(-4.2, 8.1), Complex::new(0.0, 3.0)], 2, 2);
 
         assert_eq!(-m1, m2);
+    }
+
+    #[test]
+    fn test_matrix_product() {
+        let m1 = ComplexMatrix::new(vec![Complex::new(3.0, 2.0), Complex::new(0.0, 0.0), Complex::new(5.0, -6.0),
+                                         Complex::new(1.0, 0.0), Complex::new(4.0, 2.0), Complex::new(0.0, 1.0),
+                                         Complex::new(4.0, -1.0), Complex::new(0.0, 0.0), Complex::new(4.0, 0.0)], 3, 3);
+        let m2 = ComplexMatrix::new(vec![Complex::new(5.0, 0.0), Complex::new(2.0, -1.0), Complex::new(6.0, -4.0),
+                                         Complex::new(0.0, 0.0), Complex::new(4.0, 5.0), Complex::new(2.0, 0.0),
+                                         Complex::new(7.0, -4.0), Complex::new(2.0, 7.0), Complex::new(0.0, 0.0)], 3, 3);
+        let m3 = ComplexMatrix::new(vec![Complex::new(26.0, -52.0), Complex::new(60.0, 24.0), Complex::new(26.0, 0.0),
+                                         Complex::new(9.0, 7.0), Complex::new(1.0, 29.0), Complex::new(14.0, 0.0),
+                                         Complex::new(48.0, -21.0), Complex::new(15.0, 22.0), Complex::new(20.0, -22.0)], 3, 3);
+
+        assert_eq!(m1 * m2, m3);
+    }
+
+    #[test]
+    #[should_panic]
+    #[allow(unused_must_use)]
+    fn test_matrix_product_error() {
+        let m1 = ComplexMatrix::new(vec![Complex::new(3.0, 2.0), Complex::new(0.0, 0.0), Complex::new(5.0, -6.0),
+                                         Complex::new(1.0, 0.0), Complex::new(4.0, 2.0), Complex::new(0.0, 1.0),
+                                         Complex::new(4.0, -1.0), Complex::new(0.0, 0.0), Complex::new(4.0, 0.0)], 3, 3);
+        let m2 = ComplexMatrix::new(vec![Complex::new(5.0, 0.0), Complex::new(2.0, -1.0),
+                                         Complex::new(0.0, 0.0), Complex::new(4.0, 5.0)], 2, 2);
+
+        m1 * m2;
     }
 }
