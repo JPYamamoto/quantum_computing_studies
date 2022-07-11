@@ -7,10 +7,10 @@ use crate::utils::complex_number::Complex;
 /// fine for the purposes of the book. Maybe I'll change this later if the need
 /// comes up.
 #[derive(Debug, PartialEq)]
-pub struct ComplexVector(pub Vec<Complex>);
+pub struct ComplexVector<const N: usize>(pub [Complex; N]);
 
 /// Support for adding complex vectors.
-impl Add for ComplexVector {
+impl<const N: usize> Add for ComplexVector<N> {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -19,7 +19,7 @@ impl Add for ComplexVector {
 }
 
 /// Support for scalar product on complex vectors.
-impl Mul<Complex> for ComplexVector {
+impl<const N: usize> Mul<Complex> for ComplexVector<N> {
     type Output = Self;
 
     fn mul(self, rhs: Complex) -> Self::Output {
@@ -28,7 +28,7 @@ impl Mul<Complex> for ComplexVector {
 }
 
 /// Support for negating complex vectors.
-impl Neg for ComplexVector {
+impl<const N: usize> Neg for ComplexVector<N> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -37,7 +37,7 @@ impl Neg for ComplexVector {
 }
 
 /// Support for displaying complex vectors.
-impl Display for ComplexVector {
+impl<const N: usize> Display for ComplexVector<N> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let result_string = self.0.iter()
                                   .map(|c| c.to_string())
@@ -49,26 +49,24 @@ impl Display for ComplexVector {
 }
 
 /// Coordinate-wise vector addition.
-fn add_vectors(ComplexVector(lhs): ComplexVector, ComplexVector(rhs): ComplexVector) -> ComplexVector {
-    if lhs.len() != rhs.len() {
-        panic!("Cannot add vectors of different size.");
-    }
+fn add_vectors<const N: usize>(ComplexVector(lhs): ComplexVector<N>, ComplexVector(rhs): ComplexVector<N>) -> ComplexVector<N> {
+    let mut result_vector = [Complex::new(0.0, 0.0); N];
 
-    let result_vector: Vec<Complex> = lhs.iter().zip(rhs.iter())
-                                                .map(|(&x,&y)| x + y)
-                                                .collect();
+    for i in 0..N {
+        result_vector[i] = lhs[i] + rhs[i];
+    };
 
     ComplexVector(result_vector)
 }
 
 /// Coordinate-wise complex scalar by complex vector product.
-fn product_vector_scalar(ComplexVector(vector): ComplexVector, scalar: Complex) -> ComplexVector {
-    ComplexVector(vector.iter().map(|&x| x * scalar).collect())
+fn product_vector_scalar<const N: usize>(ComplexVector(vector): ComplexVector<N>, scalar: Complex) -> ComplexVector<N> {
+    ComplexVector(vector.map(|x| x * scalar))
 }
 
 /// Inverse over addition vector, by negating each coordinate.
-fn inverse_vector(ComplexVector(vector): ComplexVector) -> ComplexVector {
-    ComplexVector(vector.iter().map(|&x| -x).collect())
+fn inverse_vector<const N: usize>(ComplexVector(vector): ComplexVector<N>) -> ComplexVector<N> {
+    ComplexVector(vector.map(|x| -x))
 }
 
 #[cfg(test)]
@@ -76,34 +74,25 @@ mod tests {
     use super::*;
 
     #[test]
-    #[should_panic]
-    #[allow(unused_must_use)]
-    fn test_vector_add_different_size() {
-        let v1 = ComplexVector(vec![Complex::new(6.0, -4.0), Complex::new(7.0, 3.0)]);
-        let v2 = ComplexVector(vec![Complex::new(6.0, -4.0), Complex::new(7.0, 3.0), Complex::new(4.2, -8.1)]);
-        v1 + v2;
-    }
-
-    #[test]
     fn test_vector_add() {
-        let v1 = ComplexVector(vec![Complex::new(6.0, -4.0), Complex::new(7.0, 3.0), Complex::new(4.2, -8.1), Complex::new(0.0, -3.0)]);
-        let v2 = ComplexVector(vec![Complex::new(16.0, 2.5), Complex::new(0.0, -7.0), Complex::new(6.0, 0.0), Complex::new(0.0, -4.0)]);
-        let v3 = ComplexVector(vec![Complex::new(22.0, -1.5), Complex::new(7.0, -4.0), Complex::new(10.2, -8.1), Complex::new(0.0, -7.0)]);
+        let v1 = ComplexVector([Complex::new(6.0, -4.0), Complex::new(7.0, 3.0), Complex::new(4.2, -8.1), Complex::new(0.0, -3.0)]);
+        let v2 = ComplexVector([Complex::new(16.0, 2.5), Complex::new(0.0, -7.0), Complex::new(6.0, 0.0), Complex::new(0.0, -4.0)]);
+        let v3 = ComplexVector([Complex::new(22.0, -1.5), Complex::new(7.0, -4.0), Complex::new(10.2, -8.1), Complex::new(0.0, -7.0)]);
         assert_eq!(v1 + v2, v3);
     }
 
     #[test]
     fn test_vector_product_scalar() {
-        let v1 = ComplexVector(vec![Complex::new(6.0, 3.0), Complex::new(0.0, 0.0), Complex::new(5.0, 1.0), Complex::new(4.0, 0.0)]);
-        let v2 = ComplexVector(vec![Complex::new(12.0, 21.0), Complex::new(0.0, 0.0), Complex::new(13.0, 13.0), Complex::new(12.0, 8.0)]);
+        let v1 = ComplexVector([Complex::new(6.0, 3.0), Complex::new(0.0, 0.0), Complex::new(5.0, 1.0), Complex::new(4.0, 0.0)]);
+        let v2 = ComplexVector([Complex::new(12.0, 21.0), Complex::new(0.0, 0.0), Complex::new(13.0, 13.0), Complex::new(12.0, 8.0)]);
 
         assert_eq!(v1 * Complex::new(3.0, 2.0), v2);
     }
 
     #[test]
     fn test_vector_inverse() {
-        let v1 = ComplexVector(vec![Complex::new(6.0, -4.0), Complex::new(7.0, 3.0), Complex::new(4.2, -8.1), Complex::new(0.0, -3.0)]);
-        let v2 = ComplexVector(vec![Complex::new(-6.0, 4.0), Complex::new(-7.0, -3.0), Complex::new(-4.2, 8.1), Complex::new(0.0, 3.0)]);
+        let v1 = ComplexVector([Complex::new(6.0, -4.0), Complex::new(7.0, 3.0), Complex::new(4.2, -8.1), Complex::new(0.0, -3.0)]);
+        let v2 = ComplexVector([Complex::new(-6.0, 4.0), Complex::new(-7.0, -3.0), Complex::new(-4.2, 8.1), Complex::new(0.0, 3.0)]);
 
         assert_eq!(-v1, v2);
     }
