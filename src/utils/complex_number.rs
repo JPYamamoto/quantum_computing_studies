@@ -1,4 +1,5 @@
 use std::ops::{Add, Mul, Neg, Sub, Div, AddAssign};
+use std::iter::Sum;
 use std::fmt::{Formatter, Result, Display};
 use std::convert::From;
 
@@ -104,6 +105,15 @@ impl AddAssign for Complex {
             real: self.real + other.real,
             imaginary: self.imaginary + other.imaginary,
         };
+    }
+}
+
+// Support for getting the sum of an iterator of complex numbers.
+impl Sum for Complex {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item=Self> {
+        iter.fold(Complex::new(0.0, 0.0), |acc, x| acc + x)
     }
 }
 

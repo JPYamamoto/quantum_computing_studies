@@ -27,6 +27,14 @@ impl<const N: usize> Mul<Complex> for ComplexVector<N> {
     }
 }
 
+impl<const N: usize> Mul<ComplexVector<N>> for ComplexVector<N> {
+    type Output = Complex;
+
+    fn mul(self, rhs: ComplexVector<N>) -> Self::Output {
+        inner_product_vector(self, rhs)
+    }
+}
+
 /// Support for negating complex vectors.
 impl<const N: usize> Neg for ComplexVector<N> {
     type Output = Self;
@@ -64,6 +72,15 @@ fn product_vector_scalar<const N: usize>(ComplexVector(vector): ComplexVector<N>
     ComplexVector(vector.map(|x| x * scalar))
 }
 
+/// Inner product of two complex vectors, defined as the sum of the product entry by entry
+/// of the conjugate vector by another vector.
+fn inner_product_vector<const N: usize>(ComplexVector(v1): ComplexVector<N>, ComplexVector(v2): ComplexVector<N>) -> Complex {
+    v1.iter()
+      .zip(v2.iter())
+      .map(|(&x1, &x2)| x1.conjugate() * x2)
+      .sum()
+}
+
 /// Inverse over addition vector, by negating each coordinate.
 fn inverse_vector<const N: usize>(ComplexVector(vector): ComplexVector<N>) -> ComplexVector<N> {
     ComplexVector(vector.map(|x| -x))
@@ -95,5 +112,13 @@ mod tests {
         let v2 = ComplexVector([Complex::new(-6.0, 4.0), Complex::new(-7.0, -3.0), Complex::new(-4.2, 8.1), Complex::new(0.0, 3.0)]);
 
         assert_eq!(-v1, v2);
+    }
+
+    #[test]
+    fn test_inner_product() {
+        let v1 = ComplexVector([Complex::new(6.0, -4.0), Complex::new(7.0, 3.0), Complex::new(4.2, -8.1), Complex::new(0.0, -3.0)]);
+        let v2 = ComplexVector([Complex::new(16.0, 2.5), Complex::new(0.0, -7.0), Complex::new(6.0, 0.0), Complex::new(0.0, -4.0)]);
+
+        assert_eq!(v1 * v2, Complex::new(102.2, 78.6));
     }
 }
