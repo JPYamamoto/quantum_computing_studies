@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::{Add, Mul, Neg}};
+use std::{fmt::Display, ops::{Add, Sub, Mul, Neg}};
 
 use crate::utils::complex_number::Complex;
 
@@ -6,8 +6,19 @@ use crate::utils::complex_number::Complex;
 /// I should have probably gone with generics, but I think complex will do just
 /// fine for the purposes of the book. Maybe I'll change this later if the need
 /// comes up.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct ComplexVector<const N: usize>(pub [Complex; N]);
+
+impl<const N: usize> ComplexVector<N> {
+    pub fn distance_to(self, rhs: ComplexVector<N>) -> f64 {
+        let diff = self - rhs;
+        diff.norm()
+    }
+
+    pub fn norm(self) -> f64 {
+        (self * self).real.sqrt()
+    }
+}
 
 /// Support for adding complex vectors.
 impl<const N: usize> Add for ComplexVector<N> {
@@ -15,6 +26,15 @@ impl<const N: usize> Add for ComplexVector<N> {
 
     fn add(self, rhs: Self) -> Self::Output {
         add_vectors(self, rhs)
+    }
+}
+
+// Support for subtracting complex vectors.
+impl<const N: usize> Sub for ComplexVector<N> {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self::Output {
+        self + -other
     }
 }
 
@@ -120,5 +140,14 @@ mod tests {
         let v2 = ComplexVector([Complex::new(16.0, 2.5), Complex::new(0.0, -7.0), Complex::new(6.0, 0.0), Complex::new(0.0, -4.0)]);
 
         assert_eq!(v1 * v2, Complex::new(102.2, 78.6));
+    }
+
+    #[test]
+    fn test_distance() {
+        let v1 = ComplexVector([Complex::new(3.0, 0.0), Complex::new(1.0, 0.0), Complex::new(2.0, 0.0)]);
+        let v2 = ComplexVector([Complex::new(2.0, 0.0), Complex::new(2.0, 0.0), Complex::new(-1.0, 0.0)]);
+
+        assert_eq!(v1.distance_to(v2), v2.distance_to(v1));
+        assert_eq!(v1.distance_to(v2), 11f64.sqrt());
     }
 }
