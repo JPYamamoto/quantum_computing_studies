@@ -66,10 +66,10 @@ impl<const R: usize, const C: usize> Mul<Complex> for ComplexMatrix<R, C> {
 
 /// Support for vector-matrix product.
 impl<const R: usize, const C: usize> Mul<ComplexVector<C>> for ComplexMatrix<R, C> {
-    type Output = ComplexMatrix<R, 1>;
+    type Output = ComplexVector<R>;
 
     fn mul(self, rhs: ComplexVector<C>) -> Self::Output {
-        product_matrices(self, ComplexMatrix::from(rhs))
+        product_matrix_vector(self, rhs)
     }
 }
 
