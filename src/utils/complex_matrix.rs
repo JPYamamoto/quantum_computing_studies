@@ -11,6 +11,34 @@ impl<const R: usize, const C: usize> ComplexMatrix<R, C> {
     pub fn new(values: [[Complex; C]; R]) -> Self {
         ComplexMatrix(values)
     }
+
+    pub fn conjugate(&self) -> ComplexMatrix<R, C> {
+        let new_elements = self.0.map(|arr| arr.map(|x| x.conjugate()));
+
+        ComplexMatrix(new_elements)
+    }
+
+    pub fn transpose(&self) -> ComplexMatrix<C, R> {
+        let mut m = ComplexMatrix::new([[Complex::new(0.0, 0.0); R]; C]);
+
+        for j in 0..R {
+            for i in 0..C {
+                m[[j, i]] = self[[i, j]];
+            }
+        }
+
+        m
+    }
+
+    pub fn conjugate_transpose(&self) -> ComplexMatrix<C, R> {
+        self.conjugate().transpose()
+    }
+}
+
+impl <const N: usize> ComplexMatrix<N, N> {
+    pub fn is_hermitian(&self) -> bool {
+        *self == self.conjugate_transpose()
+    }
 }
 
 impl<const N: usize> From<ComplexVector<N>> for ComplexMatrix<N, 1> {
@@ -221,5 +249,24 @@ mod tests {
                                      [Complex::new(48.0, -21.0), Complex::new(15.0, 22.0), Complex::new(20.0, -22.0)]]);
 
         assert_eq!(m1 * m2, m3);
+    }
+
+    #[test]
+    fn test_is_hermitian() {
+        let m1 = ComplexMatrix::new([[Complex::new(5.0, 0.0), Complex::new(4.0, 5.0), Complex::new(6.0, -16.0)],
+                                     [Complex::new(4.0, -5.0), Complex::new(13.0, 0.0), Complex::new(7.0, 0.0)],
+                                     [Complex::new(6.0, 16.0), Complex::new(7.0, 0.0), Complex::new(-2.1, 0.0)]]);
+
+        let m2 = ComplexMatrix::new([[Complex::new(7.0, 0.0), Complex::new(6.0, 5.0)],
+                                     [Complex::new(6.0, -5.0), Complex::new(-3.0, 0.0)]]);
+
+        let m3 = ComplexMatrix::new([[Complex::new(1.0, 0.0), Complex::new(-3.0, 0.0), Complex::new(3.0, 0.0)],
+                                     [Complex::new(3.0, 0.0), Complex::new(-5.0, 0.0), Complex::new(3.0, 0.0)],
+                                     [Complex::new(6.0, 0.0), Complex::new(-6.0, 0.0), Complex::new(4.0, 0.0)]]);
+
+
+        assert!(m1.is_hermitian());
+        assert!(m2.is_hermitian());
+        assert!(!m3.is_hermitian());
     }
 }
